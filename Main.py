@@ -23,11 +23,16 @@ def initialize_arrays(recording_duration, n_channels, fs):
     sample_time ~ expected time of each sample
     '''
     # Creates "empty" arrays with np.array of given size, then actually empties them
-    sample_data = np.empty([recording_duration * fs,n_channels])
+    total_samples = recording_duration * fs
+    sample_data = np.empty([total_samples,n_channels])
     sample_data[:] = np.NaN
     
-    sample_time = np.empty([n_channels, 1])
-    sample_time[:] = 1/fs
+    sample_time = np.empty([total_samples, 2])
+    # Has 2 columns, 1: sample_n, 2: predicted time of sample_n, each row is n sample
+    for sample_n in range(total_samples):
+        sample_time[sample_n][0] = sample_n + 1
+        sample_time[sample_n][1] = (sample_n + 1) * (1/fs)
+        
     
     return sample_data, sample_time;
 
