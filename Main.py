@@ -7,6 +7,7 @@ Created on Mon Mar 01 2021
 #Imports
 import numpy as np
 import serial
+import time
 from matplotlib import pyplot as plt
 
 # %% Method Definition
@@ -20,18 +21,17 @@ def initialize_arrays(recording_duration, n_channels, fs):
 
     Returns 2 NumPy arrays
     sample_data ~ array of NANs where rows are samples and columns are channels
-    sample_time ~ expected time of each sample
+    sample_time ~  sequential list of expected time of each sample
     '''
     # Creates "empty" arrays with np.array of given size, then actually empties them
     total_samples = recording_duration * fs
     sample_data = np.empty([total_samples,n_channels])
     sample_data[:] = np.NaN
-    
-    sample_time = np.empty([total_samples, 2])
-    # Has 2 columns, 1: sample_n, 2: predicted time of sample_n, each row is n sample
+
+    #Fill sample_time array with predicted time of each sample step
+    sample_time = []
     for sample_n in range(total_samples):
-        sample_time[sample_n][0] = sample_n + 1
-        sample_time[sample_n][1] = (sample_n + 1) * (1/fs)
+        sample_time.append((sample_n + 1) * (1/fs))
         
     
     return sample_data, sample_time;
@@ -43,11 +43,28 @@ def initialize_plot(sample_data, sample_time):
     Returns line objects for future plotting
     sample_lines ~ line objects for plotting
     '''
+    plt.figure()
+    plt.clf()
 
+    plt.title('Arduino Data')
+    plt.xlabel('time(s)')
+    plt.ylabel('Voltage(mV)')
+
+    plt.xlim([0,sample_time[-1]])
+    plt.ylim([0,5])
+
+    sample_lines = plt.plot(sample_time[:], sample_data)
+    plt.show()    
+    return sample_lines
     
 
-# %% Method Calls
+# %% Method Calls and Figure Saving
 
+out_folder = '.'
 sd,st = initialize_arrays(2,3,7)
+lines = initialize_plot(sd,st)
+
 print(st)
-initialize_plot(sd,st)
+
+plt.savefig('ArduinoData_'+time.strftime("%Y-%m-%j_%H-%M-%S",time.localtime()))
+
