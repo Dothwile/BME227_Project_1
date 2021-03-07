@@ -60,11 +60,13 @@ def initialize_plot(sample_data, sample_time):
 
 # %% Method Calls and Figure Saving
 
-out_folder = '.'
+out_folder = 'F:\TestFolder'
 sd,st = initialize_arrays(2,3,7)
 lines = initialize_plot(sd,st)
 
 print(st)
 
-plt.savefig('ArduinoData_'+time.strftime("%Y-%m-%j_%H-%M-%S",time.localtime()))
+plt.savefig(out_folder + '\ArduinoData_'+time.strftime("%Y-%m-%d_%H-%M-%S",time.localtime()))
+np.save(out_folder + '\ArduinoData_'+time.strftime("%Y-%m-%d_%H-%M-%S",time.localtime()),sd)
+np.save(out_folder + '\ArduinoTime_'+time.strftime("%Y-%m-%d_%H-%M-%S",time.localtime()),st)
 
