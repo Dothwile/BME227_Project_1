@@ -64,7 +64,13 @@ def initialize_plot(sample_data, sample_time):
 sd,st = initialize_arrays(2,3,7)
 lines = initialize_plot(sd,st)
 
+# %% Read Serial Data into Array
 
+port_ID = 'aaa'
+
+with serial.Serial(port=port_ID,baudrate='500000') as arduino_data:
+    for sample_step in range(len(st)):
+        
 
 #print(st)
 
