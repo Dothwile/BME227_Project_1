@@ -85,7 +85,6 @@ with serial.Serial(port=port_ID,baudrate=500000) as arduino_data:
 
         # Writes the output of each channel to associate column of data array
         # Converts to V
-        '''
         for channel in range(channel_count):
             sd[sample_index, channel] = int(data_string[channel])*5.0/1024
 
@@ -94,13 +93,13 @@ with serial.Serial(port=port_ID,baudrate=500000) as arduino_data:
             lines[channel].set_ydata(sd[0:sample_index+1, channel])
             #print(np.shape(sd))
             plt.pause(0.0001)
-        '''
+        
 
         sd[sample_index, 0] = int(data_string[1])*5.0/1024
 
         # Update the lines
-        lines[0].set_xdata(st[0:sample_index+1])
-        lines[0].set_ydata(sd[0:sample_index+1, 0])
+        #lines[0].set_xdata(st[0:sample_index+1])
+        #lines[0].set_ydata(sd[0:sample_index+1, 0])
 
 
         #print(sd[0:sample_index+1, 0])
