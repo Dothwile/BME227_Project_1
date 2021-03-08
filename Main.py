@@ -48,7 +48,7 @@ def initialize_plot(sample_data, sample_time):
 
     plt.title('Arduino Data')
     plt.xlabel('time(s)')
-    plt.ylabel('Voltage(mV)')
+    plt.ylabel('Voltage(V)')
 
     plt.xlim([0,sample_time[-1]])
     plt.ylim([0,5])
@@ -66,16 +66,26 @@ lines = initialize_plot(sd,st)
 
 # %% Read Serial Data into Array
 
-port_ID = 'aaa'
+port_ID = 'COM5'
+sample_count = len(st)
+channel_count = sd.shape[1]
 
 with serial.Serial(port=port_ID,baudrate='500000') as arduino_data:
-    for sample_step in range(len(st)):
-        
+    for sample_index in range(sample_count):
+        # Extract data string to parse
+        data_string = arduino_data.readline()
+        # Split into list of strings
+        data_string = data_string.split()
+
+        st[sample_index] = data_string[0]
+
+        for channel in range(channel_count):
+            sd[sample_index][channel] = int(data_string[channel + 1])*5.0/1024
 
 #print(st)
 
 # Figure Saving
-out_folder = 'F:\TestFolder'
+out_folder = '.'
 plt.savefig(out_folder + '\ArduinoData_'+time.strftime("%Y-%m-%d_%H-%M-%S",time.localtime()))
 np.save(out_folder + '\ArduinoData_'+time.strftime("%Y-%m-%d_%H-%M-%S",time.localtime()),sd)
 np.save(out_folder + '\ArduinoTime_'+time.strftime("%Y-%m-%d_%H-%M-%S",time.localtime()),st)
