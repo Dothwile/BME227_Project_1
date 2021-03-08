@@ -77,12 +77,13 @@ with serial.Serial(port=port_ID,baudrate='500000') as arduino_data:
         # Split into list of strings
         data_string = data_string.split()
 
-        st[sample_index] = data_string[0]
+        st[sample_index] = int(data_string[0])
 
         for channel in range(channel_count):
             sd[sample_index][channel] = int(data_string[channel + 1])*5.0/1024
 
-#print(st)
+print(st)
+print(sd)
 
 # Figure Saving
 out_folder = '.'
