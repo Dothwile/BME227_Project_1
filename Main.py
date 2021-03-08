@@ -24,7 +24,7 @@ def initialize_arrays(recording_duration, n_channels, fs):
     sample_time ~  sequential list of expected time of each sample
     '''
     # Creates "empty" arrays with np.array of given size, then actually empties them
-    total_samples = int(recording_duration * fs)
+    total_samples = round((recording_duration * fs)+0.5)
     sample_data = np.zeros([total_samples,n_channels])
     sample_data[:] = np.NaN
 
@@ -73,7 +73,7 @@ print(channel_count)
 print(np.shape(sd))
 
 fig.show()
-with serial.Serial(port=port_ID,baudrate='500000') as arduino_data:
+with serial.Serial(port=port_ID,baudrate=500000) as arduino_data:
     for sample_index in range(sample_count):
         # Extract data string to parse
         data_string = arduino_data.readline()
@@ -85,6 +85,7 @@ with serial.Serial(port=port_ID,baudrate='500000') as arduino_data:
 
         # Writes the output of each channel to associate column of data array
         # Converts to V
+        '''
         for channel in range(channel_count):
             sd[sample_index, channel] = int(data_string[channel])*5.0/1024
 
@@ -93,13 +94,27 @@ with serial.Serial(port=port_ID,baudrate='500000') as arduino_data:
             lines[channel].set_ydata(sd[0:sample_index+1, channel])
             #print(np.shape(sd))
             plt.pause(0.0001)
+        '''
+
+        sd[sample_index, 0] = int(data_string[1])*5.0/1024
+
+        # Update the lines
+        lines[0].set_xdata(st[0:sample_index+1])
+        lines[0].set_ydata(sd[0:sample_index+1, 0])
+
+
+        #print(sd[0:sample_index+1, 0])
+        print(st[sample_index])
+        #print(np.shape(sd))
+        plt.pause(0.0001)
+
 
 # Close the port
 arduino_data.close()
 
 #print(len(st))
 #print(st)
-print(sd)
+#print(sd)
 
 # Figure Saving
 out_folder = '.'
