@@ -72,7 +72,7 @@ lines = initialize_plot(sd,st)
 # %% Read Serial Data into Array
 
 # Variables and debug prints
-port_ID = 'COM3'
+port_ID = 'COM4'
 sample_count = sd.shape[0]
 print(np.shape(sd))
 print(sample_count)
