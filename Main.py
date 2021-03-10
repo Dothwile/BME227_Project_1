@@ -47,7 +47,7 @@ def initialize_plot(sample_data, sample_time):
     plt.clf()
 
     plt.title('Arduino Data')
-    plt.xlabel('time(s)')
+    plt.xlabel('time(ms)')
     plt.ylabel('Voltage(V)')
 
     plt.xlim([0,sample_time[-1]])
@@ -65,22 +65,19 @@ sample_freq = 500
 
 # %% Method Calls
 
-fig = plt.figure()
+plt.figure().show()
 sd,st = initialize_arrays(sample_dura,channel_count,sample_freq)
 lines = initialize_plot(sd,st)
 
 # %% Read Serial Data into Array
 
 # Variables and debug prints
-port_ID = 'COM4'
+port_ID = 'COM3'
 sample_count = sd.shape[0]
-print(np.shape(sd))
-print(sample_count)
 
-fig.show()
 with serial.Serial(port=port_ID,baudrate=500000) as arduino_data:
 
-    arduino_data.flushInput() # Flushing at start leads to full line reads unlike in loop
+    #arduino_data.flushInput() # Flushing at start leads to full line reads unlike in loop
 
     for sample_index in range(sample_count):
         # Extract data string to parse
@@ -94,27 +91,23 @@ with serial.Serial(port=port_ID,baudrate=500000) as arduino_data:
         print(st[sample_index]) # Time as predicted
         print('Seperator')
         print(st[sample_index-1]) # Time is updating properly
-
-
         
         # Uses short circuit logic and to avoid indexing errors when read line empty or short
-        if(len(data_string) >= (channel_count + 1) and (st[sample_index] <= int(data_string[0]))):
+        if(len(data_string) >= (channel_count + 1) and (st[sample_index] >= int(data_string[0]))):
             st[sample_index] = int(data_string[0])
         
-
             # Writes the output of each channel to associate column of data array
             # Converts to V
             for channel in range(channel_count):
-                sd[sample_index, channel] = int(data_string[channel])*5.0/1024
-
+                sd[sample_index, channel] = int(data_string[channel+1])*5.0/1024
+        
+        # Seperate check and loop for plot updates reduces net operations per cycle
+        if((sample_index % 10) == 0):
+            for channel in range(channel_count):                
                 # Update the lines
                 lines[channel].set_xdata(st[0:sample_index+1])
                 lines[channel].set_ydata(sd[0:sample_index+1, channel])
-                #print(np.shape(sd))
                 plt.pause(0.0001)
-            
-
-            sd[sample_index, 0] = int(data_string[1])*5.0/1024
 
 # Close the port
 arduino_data.close()
