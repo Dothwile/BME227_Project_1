@@ -81,16 +81,9 @@ with serial.Serial(port=port_ID,baudrate=500000) as arduino_data:
 
     for sample_index in range(sample_count):
         # Extract data string to parse
-        data_string = arduino_data.readline()
+        data_string = arduino_data.readline().decode('ascii')
         # Split into list of strings
         data_string = data_string.split()
-        
-        #print(sample_index)
-        print(len(data_string))
-        #print(sd[sample_index-1,0]) # Values updating properly, nans in places where data_string not full
-        print(st[sample_index]) # Time as predicted
-        print('Seperator')
-        print(st[sample_index-1]) # Time is updating properly
         
         # Uses short circuit logic and to avoid indexing errors when read line empty or short
         if(len(data_string) >= (channel_count + 1) and (st[sample_index] >= int(data_string[0]))):
@@ -102,7 +95,7 @@ with serial.Serial(port=port_ID,baudrate=500000) as arduino_data:
                 sd[sample_index, channel] = int(data_string[channel+1])*5.0/1024
         
         # Seperate check and loop for plot updates reduces net operations per cycle
-        if((sample_index % 10) == 0):
+        if((sample_index % 50) == 0):
             for channel in range(channel_count):                
                 # Update the lines
                 lines[channel].set_xdata(st[0:sample_index+1])
