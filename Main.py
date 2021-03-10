@@ -8,6 +8,7 @@ Created on Mon Mar 01 2021
 import numpy as np
 import serial
 import time
+import argparse
 from matplotlib import pyplot as plt
 
 # %% Method Definition
