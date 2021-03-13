@@ -13,19 +13,6 @@ from matplotlib import pyplot as plt
 
 # %% Method Definition
 
-# Create parser to feed into read_and_plot_serial_data method
-parser = argparse.ArgumentParser(description='Read, plot, and save multichannel EMG data from a connected device in real time')
-
-# Add arguments and help text
-parser.add_argument('com_port',help='Port of connected EMG device',type=str)
-parser.add_argument('recording_duration',help='Duration of EMG sampling in seconds',type=float)
-parser.add_argument('n_channels',help='How many sample channels of EMG device',type=int)
-parser.add_argument('fs',help='Frequency of samples taken from EMG, should match device frequency',type=float)
-parser.add_argument('--out_folder',help='Filepath location where figures and data are saved, default to current path',type=str)
-
-# Collect arguments
-args = parser.parse_args()
-
 def read_and_plot_serial_data(com_port, recording_duration, n_channels, fs, out_folder='.'):
     '''read_and_plot_serial_data
    Takes 3 numbers and 2 strings
@@ -67,12 +54,15 @@ def read_and_plot_serial_data(com_port, recording_duration, n_channels, fs, out_
         Returns line objects for future plotting
         sample_lines ~ line objects for plotting
         '''
+        # Clear the figure just in case
         plt.clf()
     
+        # Set up format and labels of the graph
         plt.title('Arduino Data')
         plt.xlabel('time(ms)')
         plt.ylabel('Voltage(V)')
     
+        # Create Axis limits for the graph (x~total time in ms, y~0-5 volts)
         plt.xlim([0,sample_time[-1]])
         plt.ylim([0,5])
     
@@ -81,22 +71,22 @@ def read_and_plot_serial_data(com_port, recording_duration, n_channels, fs, out_
         
         return sample_lines
     
-    # %% Method Calls
+    # %% Method Calls and Variable Assignment
     
+    # Create and show figure graph to use
     plt.figure().show()
+    
+    # Assign Values to sd~(sample_data_array) and st~(sample_time_array) using return of initialize_arrays
     sd,st = initialize_arrays(recording_duration,n_channels,fs)
+    
+    # Assign Value to lines object for use in graph with the return of initialize_plot
     lines = initialize_plot(sd,st)
     
     # %% Read Serial Data into Array
     
-    # Variables and debug prints
-    sample_count = sd.shape[0]
-    
     with serial.Serial(port=com_port,baudrate=500000) as arduino_data:
     
-        #arduino_data.flushInput() # Flushing at start leads to full line reads unlike in loop
-    
-        for sample_index in range(sample_count):
+        for sample_index in range(sd.shape[0]):
             # Extract data string to parse
             data_string = arduino_data.readline().decode('ascii')
             # Split into list of strings
@@ -109,8 +99,10 @@ def read_and_plot_serial_data(com_port, recording_duration, n_channels, fs, out_
                 # Writes the output of each channel to associate column of data array
                 # Converts to V
                 for channel in range(n_channels):
+                    # Write collected data point from each channel to associated position in sd
                     sd[sample_index, channel] = int(data_string[channel+1])*5.0/1024
-            else: # If data readline is not full, consider it a dropped point and increase time sample index
+            
+            else: # If data readline is not full, consider it a dropped point and increase time sample index (otherwise graph would contract and cause inaccurate time)
                 st[sample_index] = int(data_string[0])
             
             # Seperate check and loop for plot updates reduces net operations per cycle
@@ -123,9 +115,6 @@ def read_and_plot_serial_data(com_port, recording_duration, n_channels, fs, out_
     
     # Close the port
     arduino_data.close()
-    #print(len(st))
-    #print(st)
-    #print(sd)
     
     # Figure Saving
     out_folder = '.'
@@ -133,5 +122,22 @@ def read_and_plot_serial_data(com_port, recording_duration, n_channels, fs, out_
     np.save(out_folder + '\ArduinoData_'+time.strftime("%Y-%m-%d_%H-%M-%S",time.localtime()),sd)
     np.save(out_folder + '\ArduinoTime_'+time.strftime("%Y-%m-%d_%H-%M-%S",time.localtime()),st)
     
-# %% Call the whole thing
+# %% Parser Creation
+
+# Create parser to feed into read_and_plot_serial_data method
+parser = argparse.ArgumentParser(description='Read, plot, and save multichannel EMG data from a connected device in real time')
+
+# Add arguments and help text
+parser.add_argument('com_port',help='Port of connected EMG device',type=str)
+parser.add_argument('recording_duration',help='Duration of EMG sampling in seconds',type=float)
+parser.add_argument('n_channels',help='How many sample channels of EMG device',type=int)
+parser.add_argument('fs',help='Frequency of samples taken from EMG, should match device frequency',type=float)
+# Optional Arguements
+parser.add_argument('--out_folder',help='Filepath location where figures and data are saved, default to current path',type=str)
+
+# Collect arguments into an accessible object
+args = parser.parse_args()
+
+# %% Main method call
+
 read_and_plot_serial_data(args.com_port, args.recording_duration, args.n_channels, args.fs, args.out_folder)
