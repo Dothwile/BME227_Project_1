@@ -14,10 +14,17 @@ from matplotlib import pyplot as plt
     # %% Method Definition
 
 # Create parser to feed into read_and_plot_serial_data method
-parser = argparse.ArgumentParser(descrition='Read, plot, and save multichannel EMG data from a connected device in real time')
+parser = argparse.ArgumentParser(description='Read, plot, and save multichannel EMG data from a connected device in real time')
 
 # Add arguments and help text
-parser.add_argument('-of',help='')
+parser.add_argument('--com_port',help='Port of connected EMG device')
+parser.add_argument('--recording_duration',help='Duration of EMG sampling in seconds')
+parser.add_argument('--n_channels',help='How many sample channels of EMG device')
+parser.add_argument('--fs',help='Frequency of samples taken from EMG')
+parser.add_argument('--out_folder',help='Filepath location where figures and data are saved, default to current path')
+
+# Collect arguments
+args = parser.parse_args()
 
 def read_and_plot_serial_data(com_port, recording_duration, n_channels, fs, out_folder='.'):
     '''read_and_plot_serial_data
@@ -78,13 +85,11 @@ def read_and_plot_serial_data(com_port, recording_duration, n_channels, fs, out_
         
     # %% Input Variable //Will use to set from cmd when implemented, that's just housekeeping
     sample_dura = 2
-    channel_count = 3
-    sample_freq = 500
     
     # %% Method Calls
     
     plt.figure().show()
-    sd,st = initialize_arrays(sample_dura,channel_count,sample_freq)
+    sd,st = initialize_arrays(sample_dura,n_channels,fs)
     lines = initialize_plot(sd,st)
     
     # %% Read Serial Data into Array
@@ -103,17 +108,17 @@ def read_and_plot_serial_data(com_port, recording_duration, n_channels, fs, out_
             data_string = data_string.split()
             
             # Uses short circuit logic and to avoid indexing errors when read line empty or short
-            if(len(data_string) >= (channel_count + 1) and (st[sample_index] >= int(data_string[0]))):
+            if(len(data_string) >= (n_channels + 1) and (st[sample_index] >= int(data_string[0]))):
                 st[sample_index] = int(data_string[0])
             
                 # Writes the output of each channel to associate column of data array
                 # Converts to V
-                for channel in range(channel_count):
+                for channel in range(n_channels):
                     sd[sample_index, channel] = int(data_string[channel+1])*5.0/1024
             
             # Seperate check and loop for plot updates reduces net operations per cycle
             if((sample_index % 50) == 0):
-                for channel in range(channel_count):                
+                for channel in range(n_channels):                
                     # Update the lines
                     lines[channel].set_xdata(st[0:sample_index+1])
                     lines[channel].set_ydata(sd[0:sample_index+1, channel])
@@ -132,3 +137,5 @@ def read_and_plot_serial_data(com_port, recording_duration, n_channels, fs, out_
     np.save(out_folder + '\ArduinoData_'+time.strftime("%Y-%m-%d_%H-%M-%S",time.localtime()),sd)
     np.save(out_folder + '\ArduinoTime_'+time.strftime("%Y-%m-%d_%H-%M-%S",time.localtime()),st)
     
+# %% Call the whole thing
+read_and_plot_serial_data(args.com_port, args.recording_duration, args.n_channels, args.fs, args.out_folder)
