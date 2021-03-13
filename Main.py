@@ -11,17 +11,17 @@ import time
 import argparse
 from matplotlib import pyplot as plt
 
-    # %% Method Definition
+# %% Method Definition
 
 # Create parser to feed into read_and_plot_serial_data method
 parser = argparse.ArgumentParser(description='Read, plot, and save multichannel EMG data from a connected device in real time')
 
 # Add arguments and help text
-parser.add_argument('--com_port',help='Port of connected EMG device')
-parser.add_argument('--recording_duration',help='Duration of EMG sampling in seconds')
-parser.add_argument('--n_channels',help='How many sample channels of EMG device')
-parser.add_argument('--fs',help='Frequency of samples taken from EMG')
-parser.add_argument('--out_folder',help='Filepath location where figures and data are saved, default to current path')
+parser.add_argument('com_port',help='Port of connected EMG device',type=str)
+parser.add_argument('recording_duration',help='Duration of EMG sampling in seconds',type=float)
+parser.add_argument('n_channels',help='How many sample channels of EMG device',type=int)
+parser.add_argument('fs',help='Frequency of samples taken from EMG, should match device frequency',type=float)
+parser.add_argument('--out_folder',help='Filepath location where figures and data are saved, default to current path',type=str)
 
 # Collect arguments
 args = parser.parse_args()
@@ -34,9 +34,7 @@ def read_and_plot_serial_data(com_port, recording_duration, n_channels, fs, out_
    n_channels(int) ~ number of data recording channels in EMG device
    fs(num) ~ frequency of EMG recording device
    out_folder(str) ~ filepath that figures and data are saved to, defaults to current location
-    '''
-
-    
+    ''' 
 
     def initialize_arrays(recording_duration, n_channels, fs):
         '''initialize_arrays
@@ -82,14 +80,11 @@ def read_and_plot_serial_data(com_port, recording_duration, n_channels, fs, out_
         sample_lines = plt.plot(sample_time[:],sample_data[:],'-')
         
         return sample_lines
-        
-    # %% Input Variable //Will use to set from cmd when implemented, that's just housekeeping
-    sample_dura = 2
     
     # %% Method Calls
     
     plt.figure().show()
-    sd,st = initialize_arrays(sample_dura,n_channels,fs)
+    sd,st = initialize_arrays(recording_duration,n_channels,fs)
     lines = initialize_plot(sd,st)
     
     # %% Read Serial Data into Array
@@ -115,6 +110,8 @@ def read_and_plot_serial_data(com_port, recording_duration, n_channels, fs, out_
                 # Converts to V
                 for channel in range(n_channels):
                     sd[sample_index, channel] = int(data_string[channel+1])*5.0/1024
+            else: # If data readline is not full, consider it a dropped point and increase time sample index
+                st[sample_index] = int(data_string[0])
             
             # Seperate check and loop for plot updates reduces net operations per cycle
             if((sample_index % 50) == 0):
@@ -126,7 +123,6 @@ def read_and_plot_serial_data(com_port, recording_duration, n_channels, fs, out_
     
     # Close the port
     arduino_data.close()
-    
     #print(len(st))
     #print(st)
     #print(sd)
